@@ -36,11 +36,11 @@ function App() {
   const downloadSortedJSONFile = () => {
     if (unpackedPolicies) {
       const sortedPolicies = unpackedPolicies.sort((a, b) => a.get(FIELD_NAME_GL_AGGREGATE_LIMIT) as number - (b.get(FIELD_NAME_GL_AGGREGATE_LIMIT) as number))
-      const outputFileContents = JSON.stringify(sortedPolicies, es6MapAwareReplacer, 2)
+      const outputFileContents = sortedPolicies.map(policy => JSON.stringify(policy, es6MapAwareReplacer)).join('\n')
 
       const element = document.createElement('a');
       element.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(outputFileContents));
-      element.setAttribute('download', "sorted-gl-aggregate-limit.json");
+      element.setAttribute('download', "sorted-gl-aggregate-limit.jsonl");
 
       element.style.display = 'none';
       document.body.appendChild(element);
