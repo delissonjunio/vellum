@@ -83,7 +83,7 @@ const App = () => {
   return (
     <div className="p-10 flex flex-col w-full">
       <div className="flex flex-col flex-wrap content-center">
-        <h3 className="font-medium text-xl">Vellum Application Engineer Case Interview</h3>
+        <h3 className="font-medium text-xl">Vellum Application Test</h3>
       </div>
       <div className="flex flex-row mt-4 gap-6 w-full justify-around">
         <div className="flex flex-col flex-wrap content-center grow">
