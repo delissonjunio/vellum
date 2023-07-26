@@ -1,20 +1,18 @@
-import './App.css'
-
 import {
   FIELD_NAME_GL_AGGREGATE_LIMIT,
   type PackedPolicyData,
   type ProcessorOutput,
   type ProcessorStatistics,
   type UnpackedPolicyRecord
-} from './types'
-import React, { type ChangeEvent, useEffect, useMemo, useState } from 'react'
+} from '../types'
+import React, { useEffect, useMemo, useState } from 'react'
 import Dashboard from './Dashboard'
-
+import FileInput from './FileInput'
 import PolicyDisplay from './PolicyDisplay'
 
 const App = () => {
   const processor: Worker = useMemo(
-    () => new Worker(new URL('./processor.ts', import.meta.url)),
+    () => new Worker(new URL('../processor/processor.ts', import.meta.url)),
     []
   )
 
@@ -22,6 +20,7 @@ const App = () => {
   const [unpackedPolicies, setUnpackedPolicies] = useState<UnpackedPolicyRecord[]>([])
   const [fields, setFields] = useState<string[]>([])
   const [file, setFile] = useState<File>()
+  const [processing, setProcessing] = useState<boolean>(false)
 
   const es6MapAwareReplacer = (key: string, value: any) => {
     if (value instanceof Map) {
@@ -52,23 +51,22 @@ const App = () => {
     }
   }
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files != null) {
-      setFile(e.target.files[0])
-    }
-  }
-
   useEffect(() => {
     if (file != null) {
       const reader = new FileReader()
       reader.onload = (event) => {
         if (event.target?.result != null) {
-          const packedData: PackedPolicyData = JSON.parse(event.target.result as string)
-          setFields(packedData.fields)
-          processor.postMessage(packedData)
+          try {
+            const packedData: PackedPolicyData = JSON.parse(event.target.result as string)
+            setFields(packedData.fields)
+            processor.postMessage(packedData)
+          } catch (e) {
+            console.error(e)
+          }
         }
       }
 
+      setProcessing(true)
       reader.readAsText(file.slice())
     }
   }, [processor, file])
@@ -78,29 +76,36 @@ const App = () => {
       const output = e.data as unknown as ProcessorOutput
       setStatistics(output.statistics)
       setUnpackedPolicies(output.policies)
+      setProcessing(false)
     }
   }, [processor, file])
 
   return (
-    <div>
-      <header>
-        <h3>Vellum Application Engineer Case Interview</h3>
-      </header>
-      <main>
-        <section>
-          <header><h5>Input / Output</h5></header>
-          <input type="file" onChange={handleFileChange} name="Input JSON file" />
-          {(unpackedPolicies.length > 0) ? <button onClick={() => { downloadSortedJSONFile() }}>Download sorted JSON object file</button> : <></>}
-        </section>
-        <section>
-          <header><h5>Statistics</h5></header>
-          { (statistics != null) ? <Dashboard statistics={statistics} /> : ((file != null) ? <span>Loading...</span> : <span>Select a file above to calculate statistics</span>)}
-        </section>
-        <section>
-          <header><h5>All policies</h5></header>
-          <PolicyDisplay policies={unpackedPolicies} fields={fields} />
-        </section>
-      </main>
+    <div className="p-10 flex flex-col w-full">
+      <div className="flex flex-col flex-wrap content-center">
+        <h3 className="font-medium text-xl">Vellum Application Engineer Case Interview</h3>
+      </div>
+      <div className="flex flex-row mt-4 gap-6 w-full justify-around">
+        <div className="flex flex-col flex-wrap content-center grow">
+          <FileInput onFileSelected={setFile} />
+          {processing ? <div className="text-center">Loading</div> : <></>}
+        </div>
+        <div>
+          { (statistics != null) ? <Dashboard statistics={statistics} /> : <></>}
+        </div>
+        <div>
+          {(unpackedPolicies.length > 0)
+            ? (
+            <button className="px-4 py-2 font-semibold text-sm bg-cyan-500 hover:bg-cyan-700 text-white rounded-full shadow-sm" onClick={() => { downloadSortedJSONFile() }}>
+              Download sorted JSON object file
+            </button>
+              )
+            : <></>}
+        </div>
+      </div>
+      <div className="flex flex-col mt-5 justify-around">
+        <PolicyDisplay policies={unpackedPolicies} fields={fields} />
+      </div>
     </div>
   )
 }
