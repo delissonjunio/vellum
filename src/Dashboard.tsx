@@ -1,7 +1,8 @@
-import {ProcessorStatistics} from "./types";
+import { type ProcessorStatistics } from './types'
+import React from 'react'
 
 interface DashboardProps {
-  statistics: ProcessorStatistics;
+  statistics: ProcessorStatistics
 }
 
 const Dashboard = ({ statistics }: DashboardProps) => {
@@ -12,4 +13,4 @@ const Dashboard = ({ statistics }: DashboardProps) => {
   )
 }
 
-export default Dashboard;
+export default Dashboard
